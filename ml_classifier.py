@@ -34,7 +34,7 @@ LOSS = 'binary_crossentropy'											# important, more info needed
 ACTIVATION_LAST_LAYER = 'sigmoid'										# important, sigmoid doesnt work when y has more than 2 possible outcomes 
 
 BATCH_SIZE = 32															# number of samples to process before updating parameters, hier mini-batch gradient descent
-EPOCHS = 100															# number of runs through the entire dataset
+EPOCHS = 600															# number of runs through the entire dataset
 
 
 # Data:
@@ -141,10 +141,13 @@ def use_model():
 
 	model = keras.models.load_model('models/ml_classifier/{}.h5'.format(NAME))
 
-	pre_1 = X[0,0:9].reshape(-1,8)
-	pre_2 = X[1,0:9].reshape(-1,8)
-	pre_3 = X[2,0:9].reshape(-1,8)
-	pre_4 = X[3,0:9].reshape(-1,8)
+	min_max_scaler = preprocessing.MinMaxScaler()						# Data Normalizer
+	X_scale = min_max_scaler.fit_transform(X)							
+
+	pre_1 = X_scale[0,0:9].reshape(-1,8)
+	pre_2 = X_scale[1,0:9].reshape(-1,8)
+	pre_3 = X_scale[2,0:9].reshape(-1,8)
+	pre_4 = X_scale[3,0:9].reshape(-1,8)
 
 	print('[ === Final Prediction  Loaded === ]')
 	print('Should be: 0, 0, 1, 0')
@@ -179,7 +182,6 @@ def label_encoding(label_encoder, data):
 
 #####################################################################################################################
 
-
 if __name__ == '__main__':
-    main()
+    # main() 
     use_model()
