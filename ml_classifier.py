@@ -34,7 +34,7 @@ LOSS = 'binary_crossentropy'											# important, more info needed
 ACTIVATION_LAST_LAYER = 'sigmoid'										# important, sigmoid doesnt work when y has more than 2 possible outcomes 
 
 BATCH_SIZE = 32															# number of samples to process before updating parameters, hier mini-batch gradient descent
-EPOCHS = 600															# number of runs through the entire dataset
+EPOCHS = 50																# number of runs through the entire dataset
 
 
 # Data:
@@ -94,7 +94,7 @@ def main():
 
 	hist = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, epochs=EPOCHS, validation_data=(X_val, Y_val))
 	
-	model.save('models/ml_classifier/{}.h5'.format(NAME))
+	# model.save('models/ml_classifier/{}.h5'.format(NAME))
 
 	model.evaluate(X_test, Y_test)[1]									# [0] = loss, [1] = accuracy
 
@@ -112,7 +112,7 @@ def main():
 	print(model.predict(pre_3))
 	print(model.predict(pre_4))
 
-	plot_acc(hist).show
+	plot_acc(hist).show()
 
 def use_model():
 
@@ -149,7 +149,7 @@ def use_model():
 	pre_3 = X_scale[2,0:9].reshape(-1,8)
 	pre_4 = X_scale[3,0:9].reshape(-1,8)
 
-	print('[ === Final Prediction  Loaded === ]')
+	print('[ === Final Prediction Loaded === ]')
 	print('Should be: 0, 0, 1, 0')
 	print(model.predict(pre_1))
 	print(model.predict(pre_2))
