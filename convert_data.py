@@ -6,7 +6,7 @@ import copy
 
 INPUT_FILE = 'data/' + 'M_anfaelle_mit_patientendaten_kurz.csv'
 OUTPUT_FILE = 'data/processed/' + 'processed_scaled.csv'
-NORMALIZE_DATA = True
+NORMALIZE_DATA = False
 SAVE = False
 
 
@@ -210,6 +210,8 @@ def process_data():
     if SAVE:
         np.savetxt(OUTPUT_FILE, processed_data, fmt='%f', delimiter=',')
 
+    show_num_patients_per_age_group_has_aura(group_age, k_type)
+    show_num_patients_per_age_group(group_age)
     show_num_patients_with_aura(k_type)
 
 
@@ -230,6 +232,54 @@ def show_num_patients_with_aura(k_type):
 
     print('Patients that have an aura: ', has_aura)
     print('Patients that have no aura: ', has_no_aura)
+
+
+def show_num_patients_per_age_group(age_group):
+    g0 = 0
+    g1 = 0
+    g2 = 0
+    g3 = 0
+
+    for data in age_group:
+        if data == 0:
+            g0 += 1
+        if data == 1:
+            g1 += 1
+        if data == 2:
+            g2 += 1
+        if data == 3:
+            g3 += 1
+
+    print('Patients in group zero: ', g0)
+    print('Patients in group one: ', g1)
+    print('Patients in group two: ', g2)
+    print('Patients in group three: ', g3)
+
+
+def show_num_patients_per_age_group_has_aura(age_group, k_type):
+    g0 = 0
+    g1 = 0
+    g2 = 0
+    g3 = 0
+
+    print(k_type)
+
+    i = 0
+    for data in age_group:
+        if data == 0 and (k_type[i] == 0):
+            g0 += 1
+        if data == 1 and (k_type[i] == 0):
+            g1 += 1
+        if data == 2 and (k_type[i] == 0):
+            g2 += 1
+        if data == 3 and (k_type[i] == 0):
+            g3 += 1
+        i += 1
+
+    print('Patients in group zero that have aura: ', g0)
+    print('Patients in group one that have aura: ', g1)
+    print('Patients in group two that have aura: ', g2)
+    print('Patients in group three that have aura: ', g3)
 
 
 if __name__ == '__main__':

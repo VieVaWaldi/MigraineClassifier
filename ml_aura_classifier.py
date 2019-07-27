@@ -569,13 +569,74 @@ def experiment_7d(hidden_layer):
 
 
 def experiment_7e(hidden_layer):
-    """ wie 7e nur mit bester altersgruppe, einmal fuer frauen, einmal fuer manner """
+    """ wie 7d nur mit mittleren altersgruppen """
     print('############## Experiment 7e ##########################')
+    name = 'Exp_7e_agegroup=1,2hidden={}_drop=0.15'.format(hidden_layer)
+
+    input_shape = 10
+
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
+
+    Y = dataset[:, 22]
+
+    X = dataset[:, 4:8]						  # painloc, -intensity, -origin, -type
+
+    X = np.column_stack((X, dataset[:, 10]))  # licht
+    X = np.column_stack((X, dataset[:, 13]))  # ruhe
+
+    X = np.column_stack((X, dataset[:, 11]))  # laerm
+    X = np.column_stack((X, dataset[:, 18]))  # med1
+    X = np.column_stack((X, dataset[:, 19]))  # medeff
+
+    X = np.column_stack((X, dataset[:, 20]))  # altersgruppe
+
+    i = 0
+    for col in X:
+        age = col[9]
+        if (age < 0.2) or (age > 0.8):
+            X = np.delete(X, obj=i, axis=0)
+            Y = np.delete(Y, obj=i, axis=0)
+            i -= 1
+        i += 1
+
+    X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+        X, Y, test_size=0.3)
+    X_val, X_test, Y_val, Y_test = train_test_split(
+        X_val_and_test, Y_val_and_test, test_size=0.5)
+
+    model = Sequential([
+        Dense(
+            hidden_layer, activation=ACTIVATION,
+            input_shape=(input_shape,)),
+        Dense(1, activation=ACTIVATION_LAST_LAYER),
+        Dropout(0.15)
+    ])
+
+    model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
+
+    hist = model.fit(
+        X_train, Y_train, batch_size=BATCH_SIZE,
+        epochs=EPOCHS, validation_data=(X_val, Y_val))
+
+    model.evaluate(X_test, Y_test)[1]
+
+    # plot_acc(hist).show()
+    model.save('{}exp_7e/{}.h5'.format(PATH, name))
+    plot_acc(hist).savefig(
+        PATH + 'exp_7e/plot_acc_hidden={}.png'.format(hidden_layer))
+    plot_loss(hist).savefig(
+        PATH + 'exp_7e/plot_loss_hidden={}.png'.format(hidden_layer))
+
+
+def experiment_7f(hidden_layer):
+    """ wie 7c, alle age groups, einmal fuer maenner, einmal fuer frauen """
+    print('############## Experiment 7f ##########################')
 
     for j in range(2):  # gender 0 (m) - 1 (f)
         print(
-            '############## Experiment 7e Versuch {} ##########################'.format(j))
-        name = 'Exp_7d_gender={}hidden={}_drop=0.15'.format(j, hidden_layer)
+            '############## Experiment 7f Versuch {} ##########################'.format(j))
+        name = 'Exp_7f_gender={}hidden={}_drop=0.15'.format(j, hidden_layer)
 
         input_shape = 11
 
@@ -597,27 +658,18 @@ def experiment_7e(hidden_layer):
         X = np.column_stack((X, dataset[:, 2]))   # gender
 
         i = 0
-        for col in X: # delete bad age groups
-            age = col[9]
-            if age < 0.2 or age > 0.4:
-                X = np.delete(X, obj=i, axis=0)
-                Y = np.delete(Y, obj=i, axis=0)
-                i -= 1
-            i += 1
-
-        i = 0
-        for col in X: # delete gender
+        for col in X:  # delete gender
             gender = col[10]
             if j == 0:
-	            if int(gender) == 1:
-	                X = np.delete(X, obj=i, axis=0)
-	                Y = np.delete(Y, obj=i, axis=0)
-	                i -= 1
-	        if j == 1:
-	            if int(gender) == 0:
-	                X = np.delete(X, obj=i, axis=0)
-	                Y = np.delete(Y, obj=i, axis=0)
-	                i -= 1
+                if int(gender) == 1:
+                    X = np.delete(X, obj=i, axis=0)
+                    Y = np.delete(Y, obj=i, axis=0)
+                    i -= 1
+            if j == 1:
+                if int(gender) == 0:
+                    X = np.delete(X, obj=i, axis=0)
+                    Y = np.delete(Y, obj=i, axis=0)
+                    i -= 1
             i += 1
 
         X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
@@ -642,11 +694,11 @@ def experiment_7e(hidden_layer):
         model.evaluate(X_test, Y_test)[1]
 
         # plot_acc(hist).show()
-        model.save('{}exp_7d/{}.h5'.format(PATH, name))
+        model.save('{}exp_7f/{}.h5'.format(PATH, name))
         plot_acc(hist).savefig(
-            PATH + 'exp_7d/plot_acc_agegroup={}hidden={}.png'.format(j, hidden_layer))
+            PATH + 'exp_7f/plot_acc_gender={}hidden={}.png'.format(j, hidden_layer))
         plot_loss(hist).savefig(
-            PATH + 'exp_7d/plot_loss_agegroup={}hidden={}.png'.format(j, hidden_layer))
+            PATH + 'exp_7f/plot_loss_gender={}hidden={}.png'.format(j, hidden_layer))
 
 
 def plot_loss(hist):
@@ -703,4 +755,6 @@ if __name__ == '__main__':
     # experiment_7a(512)
     # experiment_7b(512)
     # experiment_7c(512)
-    experiment_7d(512)
+    # experiment_7d(512)
+    # experiment_7e(512)
+    experiment_7f(512)
