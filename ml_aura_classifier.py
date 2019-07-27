@@ -1,325 +1,297 @@
-#  Was build with the help of: https://medium.com/intuitive-deep-learning/build-your-first-neural-network-to-predict-house-prices-with-keras-eb5db60232c
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
-#### README #########################################################################################################
-
-	# ToDo:
-	# normalize data in a way that new data is scalable as well for the actual usage
-
-#####################################################################################################################
-
-
-
-import numpy as np														# super important for arrays
-import pandas as pd 													# pandas is a data analysis tool, uses numpy!
-from sklearn import preprocessing										# normalize data
-from sklearn.model_selection import train_test_split					# split data in test training
-
-import keras 															# Machine Learning Framework
-from keras.models import Sequential										
+from keras.models import Sequential
 from keras.layers import Dense
-from keras.models import load_model
-from keras import regularizers
 from keras.layers import Dropout
+# from keras.models import load_model
+from keras import regularizers
 
-import matplotlib.pyplot as plt											# Plotter
-from datetime import datetime
-from datetime import timedelta
+import matplotlib.pyplot as plt
 
+BATCH_SIZE = 100
+EPOCHS = 500
 
+OPTIMIZER = 'adam'
+LOSS = 'binary_crossentropy'
+ACTIVATION = 'relu'
+ACTIVATION_LAST_LAYER = 'sigmoid'
 
-#### Hyperparameters ################################################################################################
-NAME = 'test_model_X=8,-Y=gender-withNormalization'
-INPUT_SHAPE = 20
-HIDDEN_LAYER_1 = 1024
-HIDDEN_LAYER_2 = 1024
-
-OPTIMIZER = 'adam'														# probabaly right
-LOSS = 'binary_crossentropy'											# important, more info needed
-ACTIVATION_LAST_LAYER = 'sigmoid'										# important, sigmoid doesnt work when y has more than 2 possible outcomes 
-
-BATCH_SIZE = 32															# number of samples to process before updating parameters, hier mini-batch gradient descent
-EPOCHS = 1															# number of runs through the entire dataset
+PATH = './experiments/ml_classifier/'
 
 
-# Data:
-# X = patient 2, age 4, intensity 7, painlocation 8, paintype 9, painorigin 10, dayslost 12, shiftwork 13
-# Y = gender
+def experiment_1(hidden_layer):
+    """ Alle Daten, keine Gruppen (group_time, group_age) """
+    name = 'Exp_1_all_data_input=0:20_hidden={}_drop=0.15'.format(hidden_layer)
+    input_shape = 20
+
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
+
+    # Values 0 - 19, includes everything except group_time and group_age
+    # The end-slice marks the border:
+    # https://medium.com/@buch.willi/numpys-indexing-and-slicing-notation-explained-visually-67dc981c22c1
+    X = dataset[:, 0:20]
+    Y = dataset[:, 22]
+
+    X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+        X, Y, test_size=0.3)
+    X_val, X_test, Y_val, Y_test = train_test_split(
+        X_val_and_test, Y_val_and_test, test_size=0.5)
+
+    model = Sequential([
+        Dense(
+            hidden_layer, activation=ACTIVATION,
+            input_shape=(input_shape,)),
+        Dropout(0.15),
+        Dense(1, activation=ACTIVATION_LAST_LAYER),
+    ])
+
+    model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
+
+    hist = model.fit(
+        X_train, Y_train, batch_size=BATCH_SIZE,
+        epochs=EPOCHS, validation_data=(X_val, Y_val))
+
+    model.evaluate(X_test, Y_test)[1]
+
+    # plot_acc(hist).show()
+    model.save('{}exp_1/{}.h5'.format(PATH, name))
+    plot_acc(hist).savefig(
+        PATH + 'exp_1/plot_acc_hidden={}.png'.format(hidden_layer))
+    plot_loss(hist).savefig(
+        PATH + 'exp_1/plot_loss_hidden={}.png'.format(hidden_layer))
 
 
-def main():
-#### Step 1: Data Preprocessing #####################################################################################
+def experiment_2(hidden_layer):
+    """ Alle Daten, Gruppen (group_time, group_age) anstatt von age, time"""
+    name = 'Exp_2_all_data_input=2:22_hidden={}_drop=0.15'.format(hidden_layer)
+    input_shape = 20
 
-																		# df is a pandas dataframe, dtype for mixed values					
-	df = pd.read_csv('data/M_anfaelle_mit_patientendaten_kurz.csv', dtype={'Medname6': str, 'Medname7': str})
-	dataset = df.values													# remove first row and col: 2D Array => is numpy.ndarray
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
 
-	label_encoder = preprocessing.LabelEncoder()						# Label Encoder: turn things into numbers
+    # Values 2 - 22, includes everything except age and time
+    X = dataset[:, 2:22]
+    Y = dataset[:, 22]
 
-	gender = label_encoding(label_encoder, dataset[:,3])
-	age = dataset[:,4]		
+    X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+        X, Y, test_size=0.3)
+    X_val, X_test, Y_val, Y_test = train_test_split(
+        X_val_and_test, Y_val_and_test, test_size=0.5)
 
-	### Stupid Time #####################			
+    model = Sequential([
+        Dense(
+            hidden_layer, activation=ACTIVATION,
+            input_shape=(input_shape,)),
+        Dense(1, activation=ACTIVATION_LAST_LAYER),
+        Dropout(0.15)
+    ])
 
-	begin_time = dataset[:,5]			#		
-	end_time = dataset[:,6]				#		
-	duration = []
-	time_start = []
+    model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
 
-	i = 0
-	for date in begin_time:
-		begin_time[i] = datetime.strptime(date[:16], '%Y-%m-%d %H:%M')
-		time_start.append(datetime.strptime(date[11:16], '%H:%M'))
-		i+=1
+    hist = model.fit(
+        X_train, Y_train, batch_size=BATCH_SIZE,
+        epochs=EPOCHS, validation_data=(X_val, Y_val))
 
-	i = 0
-	for date in end_time:
-		end_time[i] = datetime.strptime(date[:16], '%Y-%m-%d %H:%M')
-		i+=1
+    model.evaluate(X_test, Y_test)[1]
 
-	for i in range(len(begin_time)):
-		dur = end_time[i] - begin_time[i]
-		duration.append(int(dur.total_seconds() / 60))
+    # plot_acc(hist).show()
+    model.save('{}exp_2/{}.h5'.format(PATH, name))
+    plot_acc(hist).savefig(
+        PATH + 'exp_2/plot_acc_hidden={}.png'.format(hidden_layer))
+    plot_loss(hist).savefig(
+        PATH + 'exp_2/plot_loss_hidden={}.png'.format(hidden_layer))
 
-		dur2 = time_start[i] - datetime(1900,1,1,0,0,0)
-		time_start[i] = int(dur2.total_seconds() / 60)
 
-	######################
+def experiment_3(hidden_layer):
+    """ Every data once on its own """
+    input_shape = 1
 
-	duration = np.array(duration)
-	time_start = np.array(time_start)
-	intensity = dataset[:,7]					
-	pain_location = label_encoding(label_encoder, dataset[:,8])
-	pain_type = label_encoding(label_encoder, dataset[:,9])
-	pain_origin = label_encoding(label_encoder, dataset[:,10])
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
 
-	###################### SYMPTOMAMIMOMAMAMAMA
+    Y = dataset[:, 22]
 
-	symptoms = dataset[:,11]
-	uebelkeit = [0] * len(dataset[:,11])
-	erbrechen = [0] * len(dataset[:,11])
-	lichtempfindlichkeit = [0] * len(dataset[:,11])
-	laermempfindlichkeit = [0] * len(dataset[:,11])
-	geruchsempfindlichkeit = [0] * len(dataset[:,11])
-	ruhebeduerfnis = [0] * len(dataset[:,11])
-	bewegungsdrang = [0] * len(dataset[:,11])
-	schwindel = [0] * len(dataset[:,11])
-	sonstiges = [0] * len(dataset[:,11])
+    for i in range(22):
+        name = 'Exp_3_every_data_once_input={}_hidden={}_drop=0.15'.format(i, hidden_layer)
+        X = dataset[:, i]
 
-	#10010100 -> 00101001 -> 101001 -> 101001 000
-	idx = -1
-	for ele in symptoms:
-		idx += 1
+        X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+            X, Y, test_size=0.3)
+        X_val, X_test, Y_val, Y_test = train_test_split(
+            X_val_and_test, Y_val_and_test, test_size=0.5)
 
-		ele = str(int(ele))
-		ele = ele[::-1]
+        model = Sequential([
+            Dense(
+                hidden_layer, activation=ACTIVATION,
+                input_shape=(input_shape,)),
+            Dense(1, activation=ACTIVATION_LAST_LAYER),
+            Dropout(0.15)
+        ])
 
-		if ele == '0':
-			continue
-		
-		ele = ele[2:len(ele)]
-		
-		col = -1
-		for char in ele:
-			col += 1
-			if char == '1':
-				if col == 0:
-					uebelkeit[idx] = 1
-				if col == 1:
-					erbrechen[idx] = 1
-				if col == 2:
-					lichtempfindlichkeit[idx] = 1
-				if col == 3:
-					laermempfindlichkeit[idx] = 1
-				if col == 4:
-					geruchsempfindlichkeit[idx] = 1
-				if col == 5:
-					ruhebeduerfnis[idx] = 1
-				if col == 6:
-					bewegungsdrang[idx] = 1
-				if col == 7:
-					schwindel[idx] = 1
-				if col == 8:
-					sonstiges[idx] = 1
+        model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
 
-	######################
+        hist = model.fit(
+            X_train, Y_train, batch_size=BATCH_SIZE,
+            epochs=EPOCHS, validation_data=(X_val, Y_val))
 
-	week_day = label_encoding(label_encoder, dataset[:,17])
-	med_1 = dataset[:,23]
-	med_effect = dataset[:,32]
+        model.evaluate(X_test, Y_test)[1]
 
-	i = 0
-	for ele in med_1:
-		if type(ele) != str:			
-			med_1[i] = 'keins'
-			# print(ele)
-		i+= 1
+        # plot_acc(hist).show()
+        model.save('{}exp_3/{}.h5'.format(PATH, name))
+        plot_acc(hist).savefig(
+            PATH + 'exp_3/plot_acc_data={}_hidden={}.png'.format(i, hidden_layer))
+        plot_loss(hist).savefig(
+            PATH + 'exp_3/plot_loss_data={}_hidden={}.png'.format(i, hidden_layer))
 
-	i = 0
-	for ele in med_effect:
-		if type(ele) != str:			
-			med_effect[i] = 'keins'
-			# print(ele)
-		i+= 1
 
-	med_1 = label_encoding(label_encoder, med_1)
-	# med_2 = label_encoding(label_encoder, dataset[:,24])
-	med_effect = label_encoding(label_encoder, med_effect)
+def experiment_4(hidden_layer):
+    """ Alle Daten, Gruppen (group_time, group_age) anstatt von age, time"""
+    name = 'Exp_4_male_only_input=0:20_hidden={}_drop=0.15'.format(hidden_layer)
+    input_shape = 20
 
-	k_type = label_encoding(label_encoder, dataset[:,34])
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
 
-	X = np.column_stack((gender, age))							
-	X = np.column_stack((X, duration))							
-	X = np.column_stack((X, time_start))							
-	X = np.column_stack((X, intensity))							
-	X = np.column_stack((X, pain_location))							
-	X = np.column_stack((X, pain_type))							
-	X = np.column_stack((X, pain_origin))		
+    # Values 2 - 22, includes everything except age and time
+    X = dataset[:, 0:20]
+    Y = dataset[:, 22]
 
-	X = np.column_stack((X, uebelkeit))		
-	X = np.column_stack((X, erbrechen))		
-	X = np.column_stack((X, lichtempfindlichkeit))		
-	X = np.column_stack((X, laermempfindlichkeit))		
-	X = np.column_stack((X, geruchsempfindlichkeit))		
-	X = np.column_stack((X, ruhebeduerfnis))		
-	X = np.column_stack((X, bewegungsdrang))		
-	X = np.column_stack((X, schwindel))		
-	X = np.column_stack((X, sonstiges))		
+    i = 0
+    for col in X:
+    	gender = col[2]
+    	if int(gender) is not 0:
+    		X = np.delete(X, obj=i, axis=0)
+    		Y = np.delete(Y, obj=i, axis=0)
+    		i -= 1
+    	i += 1
 
-	X = np.column_stack((X, week_day))							
-	X = np.column_stack((X, med_1))							
-	# X = np.column_stack((X, med_2))							
-	X = np.column_stack((X, med_effect))							
-	# X = np.column_stack((X, k_type))							
-	
-	Y = k_type															# extract predicton col
+    X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+        X, Y, test_size=0.3)
+    X_val, X_test, Y_val, Y_test = train_test_split(
+        X_val_and_test, Y_val_and_test, test_size=0.5)
 
-	# np.savetxt('processed_data.csv', X, fmt='%d', delimiter=',')
-	# numpy.savetxt('processed_data.csv', X, fmt='%d', delimiter=',')
+    model = Sequential([
+        Dense(
+            hidden_layer, activation=ACTIVATION,
+            input_shape=(input_shape,)),
+        Dense(1, activation=ACTIVATION_LAST_LAYER),
+        Dropout(0.15)
+    ])
 
-	############## VERTEILUNG MIT OHNE AURA ###################################### 	
-	# mit = 0
-	# ohne = 0
+    model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
 
-	# for data in k_type:
-	# 	print(data)
-	# 	if data == 0:
-	# 		mit += 1
-	# 	else:
-	# 		ohne += 1
+    hist = model.fit(
+        X_train, Y_train, batch_size=BATCH_SIZE,
+        epochs=EPOCHS, validation_data=(X_val, Y_val))
 
-	# print('mit', mit)
-	# print('ohne', ohne)
+    model.evaluate(X_test, Y_test)[1]
 
-	# min_max_scaler = preprocessing.MinMaxScaler()						# Data Normalizer
-	# X_scale = min_max_scaler.fit_transform(X)							
-	X_scale = X
-																		# Split data into training, test, validation
-	X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(X_scale, Y, test_size=0.3)	
-	# X_val_and_test, X_train, Y_val_and_test, Y_train = train_test_split(X_scale, Y, test_size=0.7)	
-	X_val, X_test, Y_val, Y_test = train_test_split(X_val_and_test, Y_val_and_test, test_size=0.5)
+    # plot_acc(hist).show()
+    model.save('{}exp_4/{}.h5'.format(PATH, name))
+    plot_acc(hist).savefig(
+        PATH + 'exp_4/plot_acc_hidden={}.png'.format(hidden_layer))
+    plot_loss(hist).savefig(
+        PATH + 'exp_4/plot_loss_hidden={}.png'.format(hidden_layer))
 
-	print(X_train.shape, X_val.shape, X_test.shape, Y_train.shape, Y_val.shape, Y_test.shape) # nice to debug
 
-#### Step 2: Building the Neural Network ############################################################################
 
-	# Add Dropout if overfitting occurs
-	# model = Sequential([
-	#     Dense(HIDDEN_LAYER_1, activation='relu', input_shape=(INPUT_SHAPE,)),
-	#     Dense(HIDDEN_LAYER_2, activation='relu'),
-	#     Dense(1, activation=ACTIVATION_LAST_LAYER),
-	# ])
+def experiment_5(hidden_layer):
+    """ Alle Daten, Gruppen (group_time, group_age) anstatt von age, time"""
+    name = 'Exp_5_female_only_input=0:20_hidden={}_drop=0.15'.format(hidden_layer)
+    input_shape = 20
 
-	model = Sequential([
-	    Dense(1000, activation='relu', kernel_regularizer=regularizers.l2(0.01), input_shape=(INPUT_SHAPE,)),
-	    Dropout(0.3),
-	    Dense(1000, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-	    Dropout(0.3),
-	    Dense(1000, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-	    Dropout(0.3),
-	    Dense(1000, activation='relu', kernel_regularizer=regularizers.l2(0.01)),
-	    Dropout(0.3),
-	    Dense(1, activation='sigmoid', kernel_regularizer=regularizers.l2(0.01)),
-	])
+    dataset = pd.read_csv('data/processed/processed_scaled.csv')
+    dataset = dataset.values
 
-	model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
+    # Values 2 - 22, includes everything except age and time
+    X = dataset[:, 0:20]
+    Y = dataset[:, 22]
 
-#### Step 3: Training & Testing #####################################################################################
+    i = 0
+    for col in X:
+    	gender = col[2]
+    	if int(gender) is 0:
+    		X = np.delete(X, obj=i, axis=0)
+    		Y = np.delete(Y, obj=i, axis=0)
+    		i -= 1
+    	i += 1
 
-	print('heeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei')
-	hist = model.fit(X_train, Y_train, batch_size=BATCH_SIZE, epochs=EPOCHS, validation_data=(X_val, Y_val))
-	
-	model.save('models/ml_classifier/{}.h5'.format(NAME))
+    X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+        X, Y, test_size=0.3)
+    X_val, X_test, Y_val, Y_test = train_test_split(
+        X_val_and_test, Y_val_and_test, test_size=0.5)
 
-	model.evaluate(X_test, Y_test)[1]									# [0] = loss, [1] = accuracy
+    model = Sequential([
+        Dense(
+            hidden_layer, activation=ACTIVATION,
+            input_shape=(input_shape,)),
+        Dense(1, activation=ACTIVATION_LAST_LAYER),
+        Dropout(0.15)
+    ])
 
-#### Step 4: Making Predictions #####################################################################################
+    model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
 
-	pre_1 = X_scale[0,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_2 = X_scale[1,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_3 = X_scale[2,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_4 = X_scale[3,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
+    hist = model.fit(
+        X_train, Y_train, batch_size=BATCH_SIZE,
+        epochs=EPOCHS, validation_data=(X_val, Y_val))
 
-	print('[ === Final Prediction === ]')
-	# print('Should be: 0, 0, 1, 0')
-	print(pre_1)
-	print(model.predict(pre_1))
-	print(model.predict(pre_2))
-	print(model.predict(pre_3))
-	print(model.predict(pre_4))
+    model.evaluate(X_test, Y_test)[1]
 
-	plot_acc(hist).show()
+    # plot_acc(hist).show()
+    model.save('{}exp_5/{}.h5'.format(PATH, name))
+    plot_acc(hist).savefig(
+        PATH + 'exp_5/plot_acc_hidden={}.png'.format(hidden_layer))
+    plot_loss(hist).savefig(
+        PATH + 'exp_5/plot_loss_hidden={}.png'.format(hidden_layer))
 
-def use_model():
-
-	dataset = pd.read_csv('data/processed_data_no_header.csv')
-	# dataset = df.values													# remove first row and col: 2D Array => is numpy.ndarray
-
-	X = dataset[:,0:20]
-	Y = dataset[:,21]
-
-	print(X)
-	print(Y)
-
-	model = keras.models.load_model('models/ml_classifier/{}.h5'.format(NAME))
-
-	pre_1 = X[0,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_2 = X[1,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_3 = X[2,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-	pre_4 = X[3,0:INPUT_SHAPE].reshape(-1,INPUT_SHAPE)
-
-	print('[ === Final Prediction === ]')
-	# print('Should be: 0, 0, 1, 0')
-	print(model.predict(pre_1))
-	print(model.predict(pre_2))
-	print(model.predict(pre_3))
-	print(model.predict(pre_4))
-
-#### HELPERS ########################################################################################################
 
 def plot_loss(hist):
-	plt.plot(hist.history['loss'])									
-	plt.plot(hist.history['val_loss'])
-	plt.title('Model loss')
-	plt.ylabel('Loss')
-	plt.xlabel('Epoch')
-	plt.legend(['Train', 'Val'], loc='upper right')
-	return plt
+    plt.clf()
+    plt.plot(hist.history['loss'])
+    plt.plot(hist.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    return plt
+
 
 def plot_acc(hist):
-	plt.plot(hist.history['acc'])										
-	plt.plot(hist.history['val_acc'])
-	plt.title('Model accuracy')
-	plt.ylabel('Accuracy')
-	plt.xlabel('Epoch')
-	plt.legend(['Train', 'Val'], loc='lower right')
-	return plt
+    plt.clf()
+    plt.plot(hist.history['acc'])
+    plt.plot(hist.history['val_acc'])
+    plt.title('Model accuracy')
+    plt.ylabel('Accuracy')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Val'], loc='lower right')
+    return plt
 
-def label_encoding(label_encoder, data):
-	label_encoder.fit(data)
-	return label_encoder.transform(data)
 
-#####################################################################################################################
+def np_debug():
+    np.set_printoptions(precision=2)
+    np.set_printoptions(suppress=True)
+   
 
 if __name__ == '__main__':
-    # main() 
-    use_model()
+    experiment_1(64)
+ #    experiment_1(256)
+ #    experiment_1(512)
+
+	# experiment_2(64)
+ #    experiment_2(256)
+ #    experiment_2(512)
+    
+ #    experiment_3(64)
+ #    experiment_3(256)
+ #    experiment_3(512)
+
+ #    experiment_4(64)
+ #    experiment_4(256)
+ #    experiment_4(512)
+
+ #    experiment_5(64)
+ #    experiment_5(256)
+ #    experiment_5(512)
