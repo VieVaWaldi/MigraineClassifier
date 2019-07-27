@@ -14,29 +14,29 @@ SAVE = False
 # NeuralNetworks and the SVM are only able to use numerical values. The new data will be turned into a csv in the folder /data.
 
 # Included data
-# 1. time_start     OR 22. group_time
-# 2. age            OR 21. group_age
-# 3. gender
-# 4. duration
-# 5. intensity
-# 6. pain_location
-# 7. pain_type
-# 8. pain_origin
-# 9. uebelkeit
-# 10. erbrechen
-# 11. lichtempfindlichkeit
-# 12. laermempfindlichkeit
-# 13. geruchsempfindlichkeit
-# 14. ruhebeduerfnis
-# 15. bewegungsdrang
-# 16. schwindel
-# 17. sonstiges
-# 18. week_day
-# 19. med_1
-# 20. med_effect
-# 21. group_age
-# 22. group_time
-# 23. k_type
+# 0. time_start     OR 21. group_time
+# 1. age            OR 20. group_age
+# 2. gender
+# 3. duration
+# 4. intensity
+# 5. pain_location
+# 6. pain_type
+# 7. pain_origin
+# 8. uebelkeit
+# 9. erbrechen
+# 10. lichtempfindlichkeit
+# 11. laermempfindlichkeit
+# 12. geruchsempfindlichkeit
+# 13. ruhebeduerfnis
+# 14. bewegungsdrang
+# 15. schwindel
+# 16. sonstiges
+# 17. week_day
+# 18. med_1
+# 19. med_effect
+# 20. group_age
+# 21. group_time
+# 22. k_type
 
 
 def process_data():
