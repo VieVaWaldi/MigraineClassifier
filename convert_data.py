@@ -213,11 +213,26 @@ def process_data():
     show_num_patients_per_age_group_has_aura(group_age, k_type)
     show_num_patients_per_age_group(group_age)
     show_num_patients_with_aura(k_type)
+    show_num_patients_gender(gender)
 
 
 def label_encoding(label_encoder, data):
     label_encoder.fit(data)
     return label_encoder.transform(data)
+
+
+def show_num_patients_gender(gender):
+    male = 0
+    female = 0
+
+    for data in gender:
+        if data == 0:
+            male += 1
+        else:
+            female += 1
+
+    print('Patients male: ', male)
+    print('Patients female: ', female)
 
 
 def show_num_patients_with_aura(k_type):

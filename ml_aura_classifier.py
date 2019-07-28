@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -18,7 +19,8 @@ LOSS = 'binary_crossentropy'
 ACTIVATION = 'relu'
 ACTIVATION_LAST_LAYER = 'sigmoid'
 
-PATH = './experiments/ml_classifier/'
+# PATH = './experiments/ml_classifier/'
+PATH = './experiments/ml_classifier/secondExp7/'
 
 
 def experiment_1(hidden_layer):
@@ -122,6 +124,8 @@ def experiment_3(hidden_layer):
 
     for i in range(22):
         print('############## Experiment 3 Versuch {} ##########################'.format(i))
+
+        i = 3
         name = 'Exp_3_every_data_once_input={}_hidden={}_drop=0.15'.format(
             i, hidden_layer)
         X = dataset[:, i]
@@ -353,7 +357,7 @@ def experiment_7a(hidden_layer):
 
     name = 'Exp_7a_best_3_input=2,4,10,13_hidden={}_drop=0.15'.format(
         hidden_layer)
-    input_shape = 3
+    input_shape = 11
 
     dataset = pd.read_csv('data/processed/processed_scaled.csv')
     dataset = dataset.values
@@ -362,6 +366,16 @@ def experiment_7a(hidden_layer):
 
     X = np.column_stack((dataset[:, 4], dataset[:, 10]))  # intensity, liicht
     X = np.column_stack((X, dataset[:, 13]))				# ruhe
+
+    X = np.column_stack((X, dataset[:, 8]))					# uebelkeit
+    X = np.column_stack((X, dataset[:, 9]))					# erbrechen
+    X = np.column_stack((X, dataset[:, 10]))				# licht
+    X = np.column_stack((X, dataset[:, 11]))				# laerm
+    X = np.column_stack((X, dataset[:, 12]))				# geruch
+    # X = np.column_stack((X, dataset[:, 13]))				# ruhe
+    X = np.column_stack((X, dataset[:, 14]))				# bewgegung
+    X = np.column_stack((X, dataset[:, 15]))				# schwindel
+    X = np.column_stack((X, dataset[:, 16]))				# sonstiges
 
     X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
         X, Y, test_size=0.3)
@@ -443,7 +457,7 @@ def experiment_7c(hidden_layer):
     print('############## Experiment 7c ##########################')
 
     name = 'Exp_7c__input=0:20_hidden={}_drop=0.15'.format(hidden_layer)
-    input_shape = 9
+    input_shape = 17
 
     dataset = pd.read_csv('data/processed/processed_scaled.csv')
     dataset = dataset.values
@@ -457,6 +471,16 @@ def experiment_7c(hidden_layer):
     X = np.column_stack((X, dataset[:, 11]))  # laerm
     X = np.column_stack((X, dataset[:, 18]))  # med1
     X = np.column_stack((X, dataset[:, 19]))  # medeff
+
+    X = np.column_stack((X, dataset[:, 8]))					# uebelkeit
+    X = np.column_stack((X, dataset[:, 9]))					# erbrechen
+    X = np.column_stack((X, dataset[:, 10]))				# licht
+    X = np.column_stack((X, dataset[:, 11]))				# laerm
+    X = np.column_stack((X, dataset[:, 12]))				# geruch
+    # X = np.column_stack((X, dataset[:, 13]))				# ruhe
+    X = np.column_stack((X, dataset[:, 14]))				# bewgegung
+    X = np.column_stack((X, dataset[:, 15]))				# schwindel
+    X = np.column_stack((X, dataset[:, 16]))				# sonstiges
 
     X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
         X, Y, test_size=0.3)
@@ -496,7 +520,7 @@ def experiment_7d(hidden_layer):
             '############## Experiment 7d Versuch {} ##########################'.format(j))
         name = 'Exp_7d_agegroup={}hidden={}_drop=0.15'.format(j, hidden_layer)
 
-        input_shape = 10
+        input_shape = 18
 
         dataset = pd.read_csv('data/processed/processed_scaled.csv')
         dataset = dataset.values
@@ -513,6 +537,16 @@ def experiment_7d(hidden_layer):
         X = np.column_stack((X, dataset[:, 19]))  # medeff
 
         X = np.column_stack((X, dataset[:, 20]))  # altersgruppe
+
+        X = np.column_stack((X, dataset[:, 8]))					# uebelkeit
+        X = np.column_stack((X, dataset[:, 9]))					# erbrechen
+        X = np.column_stack((X, dataset[:, 10]))				# licht
+        X = np.column_stack((X, dataset[:, 11]))				# laerm
+        X = np.column_stack((X, dataset[:, 12]))				# geruch
+        # X = np.column_stack((X, dataset[:, 13]))				# ruhe
+        X = np.column_stack((X, dataset[:, 14]))				# bewgegung
+        X = np.column_stack((X, dataset[:, 15]))				# schwindel
+        X = np.column_stack((X, dataset[:, 16]))				# sonstiges
 
         i = 0
         for col in X:
@@ -573,7 +607,7 @@ def experiment_7e(hidden_layer):
     print('############## Experiment 7e ##########################')
     name = 'Exp_7e_agegroup=1,2hidden={}_drop=0.15'.format(hidden_layer)
 
-    input_shape = 10
+    input_shape = 18
 
     dataset = pd.read_csv('data/processed/processed_scaled.csv')
     dataset = dataset.values
@@ -590,6 +624,16 @@ def experiment_7e(hidden_layer):
     X = np.column_stack((X, dataset[:, 19]))  # medeff
 
     X = np.column_stack((X, dataset[:, 20]))  # altersgruppe
+
+    X = np.column_stack((X, dataset[:, 8]))					# uebelkeit
+    X = np.column_stack((X, dataset[:, 9]))					# erbrechen
+    X = np.column_stack((X, dataset[:, 10]))				# licht
+    X = np.column_stack((X, dataset[:, 11]))				# laerm
+    X = np.column_stack((X, dataset[:, 12]))				# geruch
+    # X = np.column_stack((X, dataset[:, 13]))				# ruhe
+    X = np.column_stack((X, dataset[:, 14]))				# bewgegung
+    X = np.column_stack((X, dataset[:, 15]))				# schwindel
+    X = np.column_stack((X, dataset[:, 16]))				# sonstiges
 
     i = 0
     for col in X:
@@ -701,6 +745,49 @@ def experiment_7f(hidden_layer):
             PATH + 'exp_7f/plot_loss_gender={}hidden={}.png'.format(j, hidden_layer))
 
 
+def experiment_10(hidden_layer):
+    """ Debug for possbile validation errors """
+    print('############## Experiment 10 ##########################')
+
+    name = 'Exp_10_DEBUG_hidden={}_drop=0.15'.format(hidden_layer)
+    input_shape = 1
+
+    for i in range(5):
+        dataset = pd.read_csv('data/processed/processed_scaled.csv')
+        dataset = dataset.values
+
+        X = dataset[:, 12]
+        Y = dataset[:, 22]
+
+        X_train, X_val_and_test, Y_train, Y_val_and_test = train_test_split(
+            X, Y, test_size=0.3)
+        X_val, X_test, Y_val, Y_test = train_test_split(
+            X_val_and_test, Y_val_and_test, test_size=0.5)
+
+        model = Sequential([
+            Dense(
+                hidden_layer, activation=ACTIVATION,
+                input_shape=(input_shape,)),
+            Dropout(0.15),
+            Dense(1, activation=ACTIVATION_LAST_LAYER),
+        ])
+
+        model.compile(optimizer=OPTIMIZER, loss=LOSS, metrics=['accuracy'])
+
+        hist = model.fit(
+            X_train, Y_train, batch_size=BATCH_SIZE,
+            epochs=EPOCHS, validation_data=(X_val, Y_val))
+
+        model.evaluate(X_test, Y_test)[1]
+
+        # plot_acc(hist).show()
+        # model.save('{}exp_1/{}.h5'.format(PATH, name))
+        plot_acc(hist).savefig(
+            PATH + 'exp_11/plot_acc_num={}.png'.format(i))
+        plot_loss(hist).savefig(
+            PATH + 'exp_11/plot_loss_num={}.png'.format(i))
+
+
 def plot_loss(hist):
     plt.clf()
     plt.plot(hist.history['loss'])
@@ -752,9 +839,11 @@ if __name__ == '__main__':
     # experiment_6a(512)
     # experiment_6b(512)
 
-    # experiment_7a(512)
+    experiment_7a(512)
     # experiment_7b(512)
-    # experiment_7c(512)
-    # experiment_7d(512)
-    # experiment_7e(512)
-    experiment_7f(512)
+    experiment_7c(512)
+    experiment_7d(512)
+    experiment_7e(512)
+    # experiment_7f(512)
+
+    # experiment_10(512)
